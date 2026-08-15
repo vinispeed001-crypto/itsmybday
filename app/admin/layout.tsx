@@ -2,6 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { SignOutButton } from "./SignOutButton";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // This layout wraps every route under /admin, including /admin/login itself.
@@ -15,10 +16,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const supabase = createSupabaseServerClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     redirect("/admin/login");
   }
 
@@ -29,6 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin/disponibilidade" className="text-muted hover:text-ink">Disponibilidade</Link>
         <Link href="/admin/regras" className="text-muted hover:text-ink">Regras da casa</Link>
         <Link href="/admin/integracoes" className="text-muted hover:text-ink">Integrações</Link>
+        <SignOutButton />
       </nav>
       <main className="p-6">{children}</main>
     </div>
