@@ -3,6 +3,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DecisionPanel } from "./DecisionPanel";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 describe("DecisionPanel", () => {
   beforeEach(() => {
     global.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ status: "approved" }) })) as unknown as typeof fetch;

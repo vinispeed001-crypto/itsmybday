@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const REASON_SUGGESTIONS = [
   "Casa alugada para evento",
@@ -9,6 +10,7 @@ const REASON_SUGGESTIONS = [
 ];
 
 export function DecisionPanel({ requestId }: { requestId: string }) {
+  const router = useRouter();
   const [showDenyForm, setShowDenyForm] = useState(false);
   const [reason, setReason] = useState("");
 
@@ -18,7 +20,7 @@ export function DecisionPanel({ requestId }: { requestId: string }) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ decision: "approve" }),
     });
-    window.location.reload();
+    router.refresh();
   }
 
   async function confirmDeny() {
@@ -29,7 +31,7 @@ export function DecisionPanel({ requestId }: { requestId: string }) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ decision: "deny", denial_reason: reason }),
     });
-    window.location.reload();
+    router.refresh();
   }
 
   if (showDenyForm) {
