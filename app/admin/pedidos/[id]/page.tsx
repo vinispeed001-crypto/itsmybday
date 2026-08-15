@@ -54,7 +54,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
       {guestList && (
         <p className="rounded-card border border-border bg-surface p-4 text-ink">
           Lista ativa: <span className="text-gold">/lista/{guestList.share_token}</span> · limite{" "}
-          {new Date(guestList.deadline_at).toLocaleString("pt-BR")}
+          {new Date(guestList.deadline_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
         </p>
       )}
     </div>

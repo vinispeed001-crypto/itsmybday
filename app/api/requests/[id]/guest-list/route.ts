@@ -34,6 +34,16 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "request_not_approved" }, { status: 409 });
   }
 
+  const { data: existingList } = await supabase
+    .from("guest_lists")
+    .select("id")
+    .eq("request_id", params.id)
+    .maybeSingle();
+
+  if (existingList) {
+    return NextResponse.json({ error: "guest_list_already_exists" }, { status: 409 });
+  }
+
   const shareToken = crypto.randomUUID();
 
   const { data, error } = await supabase
@@ -53,6 +63,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 
+  // TODO(reliability): this insert can fail after the guest_lists insert above already
+  // succeeded, leaving a created guest list with no integration_events row — meaning
+  // /admin/integracoes (Task 15) would never surface the manual WhatsApp reminder to
+  // send the list link. No cross-table transaction is available without a Postgres RPC.
   const { error: eventError } = await supabase.from("integration_events").insert([
     {
       request_id: params.id,

@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 
 const mockGetUser = vi.fn();
 const mockSingle = vi.fn();
+const mockMaybeSingle = vi.fn();
 const mockInsert = vi.fn();
 const mockEventsInsert = vi.fn();
 
@@ -15,7 +16,10 @@ vi.mock("@/lib/supabase/server", () => ({
         return { select: () => ({ eq: () => ({ single: mockSingle }) }) };
       }
       if (table === "guest_lists") {
-        return { insert: mockInsert };
+        return {
+          select: () => ({ eq: () => ({ maybeSingle: mockMaybeSingle }) }),
+          insert: mockInsert,
+        };
       }
       return { insert: mockEventsInsert };
     },
@@ -39,10 +43,12 @@ describe("POST /api/requests/[id]/guest-list", () => {
   beforeEach(() => {
     mockGetUser.mockReset();
     mockSingle.mockReset();
+    mockMaybeSingle.mockReset();
     mockInsert.mockReset();
     mockEventsInsert.mockReset();
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } } });
     mockSingle.mockResolvedValue({ data: { status: "approved" }, error: null });
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null });
   });
 
   it("returns 401 without an authenticated user", async () => {
@@ -67,6 +73,23 @@ describe("POST /api/requests/[id]/guest-list", () => {
       params: { id: "req-1" },
     });
     expect(res.status).toBe(409);
+  });
+
+  it("rejects an invalid payload", async () => {
+    const res = await POST(makeRequest({}), { params: { id: "req-1" } });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 409 when a guest list already exists for this request", async () => {
+    mockMaybeSingle.mockResolvedValue({ data: { id: "gl-existing" }, error: null });
+    const res = await POST(
+      makeRequest({ max_men: 2, max_women: 2, deadline_at: "2099-01-01T20:00:00.000Z" }),
+      { params: { id: "req-1" } }
+    );
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error).toBe("guest_list_already_exists");
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 
   it("creates the guest list with a generated share token and a whatsapp event", async () => {
