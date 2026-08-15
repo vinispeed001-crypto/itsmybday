@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 export const createRequestSchema = z.object({
-  requester_name: z.string().min(2, "Nome muito curto"),
+  requester_name: z.string().min(2, "Nome muito curto").max(200, "Nome muito longo"),
   event_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
   event_time: z.string().regex(/^\d{2}:\d{2}$/, "Horário inválido"),
   quantity: z.number().int().positive(),
-  instagram: z.string().min(2, "Informe o Instagram"),
-  whatsapp: z.string().min(8, "Informe um WhatsApp válido"),
+  instagram: z.string().min(2, "Informe o Instagram").max(200, "Instagram muito longo"),
+  whatsapp: z.string().min(8, "Informe um WhatsApp válido").max(50, "WhatsApp muito longo"),
   referred_by_profile_id: z.string().uuid().nullable().optional(),
 });
 
@@ -14,7 +14,7 @@ export const decisionSchema = z.discriminatedUnion("decision", [
   z.object({ decision: z.literal("approve") }),
   z.object({
     decision: z.literal("deny"),
-    denial_reason: z.string().min(3, "Informe o motivo"),
+    denial_reason: z.string().min(3, "Informe o motivo").max(2000, "Motivo muito longo"),
   }),
 ]);
 
@@ -24,7 +24,7 @@ export const classificationSchema = z
     vip_until_time: z.string().regex(/^\d{2}:\d{2}$/).optional(),
     value_male: z.number().nonnegative().optional(),
     value_female: z.number().nonnegative().optional(),
-    advance_payment_note: z.string().optional(),
+    advance_payment_note: z.string().max(2000, "Observação muito longa").optional(),
   })
   .superRefine((data, ctx) => {
     if (data.type === "vip_ate_hora" && !data.vip_until_time) {
@@ -59,7 +59,7 @@ export const guestListSchema = z.object({
 });
 
 export const guestListEntrySchema = z.object({
-  name: z.string().min(2, "Nome muito curto"),
+  name: z.string().min(2, "Nome muito curto").max(200, "Nome muito longo"),
   gender: z.enum(["male", "female"]),
 });
 

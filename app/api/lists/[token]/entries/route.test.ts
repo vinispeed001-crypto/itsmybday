@@ -42,6 +42,13 @@ describe("POST /api/lists/[token]/entries", () => {
     });
   });
 
+  it("rejects a name longer than the max length", async () => {
+    const res = await POST(makeRequest({ name: "a".repeat(201), gender: "male" }), {
+      params: { token: "tok" },
+    });
+    expect(res.status).toBe(400);
+  });
+
   it("returns 404 for an unknown token", async () => {
     mockListSingle.mockResolvedValue({ data: null, error: { message: "not found" } });
     const res = await POST(makeRequest({ name: "João", gender: "male" }), { params: { token: "bad" } });

@@ -92,6 +92,28 @@ describe("POST /api/requests/[id]/guest-list", () => {
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
+  it("returns 409 when the insert loses a create race to the unique constraint", async () => {
+    mockInsert.mockReturnValue({
+      select: () => ({
+        single: () =>
+          Promise.resolve({
+            data: null,
+            error: { code: "23505", message: "duplicate key value" },
+          }),
+      }),
+    });
+
+    const res = await POST(
+      makeRequest({ max_men: 2, max_women: 2, deadline_at: "2099-01-01T20:00:00.000Z" }),
+      { params: { id: "req-1" } }
+    );
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error).toBe("guest_list_already_exists");
+    expect(mockEventsInsert).not.toHaveBeenCalled();
+  });
+
   it("creates the guest list with a generated share token and a whatsapp event", async () => {
     mockInsert.mockReturnValue({
       select: () => ({

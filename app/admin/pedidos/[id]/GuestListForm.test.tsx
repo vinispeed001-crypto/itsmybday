@@ -24,6 +24,28 @@ describe("GuestListForm", () => {
     });
   });
 
+  it("converts the deadline from America/Sao_Paulo local time to UTC", async () => {
+    render(<GuestListForm requestId="req-1" />);
+
+    await userEvent.type(screen.getByLabelText(/máximo de homens/i), "10");
+    await userEvent.type(screen.getByLabelText(/máximo de mulheres/i), "10");
+    await userEvent.type(screen.getByLabelText(/horário limite/i), "2099-01-01T20:00");
+    await userEvent.click(screen.getByRole("button", { name: /gerar lista/i }));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/requests/req-1/guest-list",
+        expect.objectContaining({
+          body: JSON.stringify({
+            max_men: 10,
+            max_women: 10,
+            deadline_at: "2099-01-01T23:00:00.000Z",
+          }),
+        })
+      );
+    });
+  });
+
   it("shows an error and does not display a link when creation fails", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, json: async () => ({}) })) as unknown as typeof fetch;
     render(<GuestListForm requestId="req-1" />);

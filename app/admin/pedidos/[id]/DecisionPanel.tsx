@@ -14,21 +14,28 @@ export function DecisionPanel({ requestId }: { requestId: string }) {
   const [showDenyForm, setShowDenyForm] = useState(false);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   async function approve() {
     setError(null);
-    const res = await fetch(`/api/requests/${requestId}/decision`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ decision: "approve" }),
-    });
+    setLoading(true);
 
-    if (!res.ok) {
-      setError("Não deu pra aprovar o pedido. Tenta de novo.");
-      return;
+    try {
+      const res = await fetch(`/api/requests/${requestId}/decision`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ decision: "approve" }),
+      });
+
+      if (!res.ok) {
+        setError("Não deu pra aprovar o pedido. Tenta de novo.");
+        return;
+      }
+
+      router.refresh();
+    } finally {
+      setLoading(false);
     }
-
-    router.refresh();
   }
 
   async function confirmDeny() {
@@ -38,19 +45,24 @@ export function DecisionPanel({ requestId }: { requestId: string }) {
     }
 
     setError(null);
+    setLoading(true);
 
-    const res = await fetch(`/api/requests/${requestId}/decision`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ decision: "deny", denial_reason: reason.trim() }),
-    });
+    try {
+      const res = await fetch(`/api/requests/${requestId}/decision`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ decision: "deny", denial_reason: reason.trim() }),
+      });
 
-    if (!res.ok) {
-      setError("Não deu pra negar o pedido. Tenta de novo.");
-      return;
+      if (!res.ok) {
+        setError("Não deu pra negar o pedido. Tenta de novo.");
+        return;
+      }
+
+      router.refresh();
+    } finally {
+      setLoading(false);
     }
-
-    router.refresh();
   }
 
   function cancelDeny() {
@@ -87,7 +99,8 @@ export function DecisionPanel({ requestId }: { requestId: string }) {
           <button
             type="button"
             onClick={confirmDeny}
-            className="rounded-card bg-danger px-4 py-2 font-semibold text-ink"
+            disabled={loading}
+            className="rounded-card bg-danger px-4 py-2 font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-50"
           >
             Confirmar
           </button>
@@ -110,14 +123,16 @@ export function DecisionPanel({ requestId }: { requestId: string }) {
         <button
           type="button"
           onClick={approve}
-          className="rounded-card bg-gold px-4 py-2 font-semibold text-bg"
+          disabled={loading}
+          className="rounded-card bg-gold px-4 py-2 font-semibold text-bg disabled:cursor-not-allowed disabled:opacity-50"
         >
           Aceitar
         </button>
         <button
           type="button"
           onClick={() => setShowDenyForm(true)}
-          className="rounded-card border border-border px-4 py-2 text-muted hover:text-ink"
+          disabled={loading}
+          className="rounded-card border border-border px-4 py-2 text-muted hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
         >
           Negar
         </button>

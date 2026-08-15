@@ -30,6 +30,20 @@ describe("POST /api/requests", () => {
     expect(res.status).toBe(400);
   });
 
+  it("rejects a requester_name longer than the max length", async () => {
+    const res = await POST(
+      makeRequest({
+        requester_name: "a".repeat(201),
+        event_date: "2099-01-01",
+        event_time: "22:00",
+        quantity: 12,
+        instagram: "camila.s",
+        whatsapp: "+5511999999999",
+      })
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("inserts a valid request and returns 201", async () => {
     mockInsert.mockReturnValue({
       select: () => ({

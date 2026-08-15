@@ -59,6 +59,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .single();
 
   if (error) {
+    if (error.code === "23505") {
+      return NextResponse.json({ error: "guest_list_already_exists" }, { status: 409 });
+    }
     console.error("guest list insert failed", error);
     return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }

@@ -30,7 +30,7 @@ Sistema de pedido, aprovação e montagem de lista de convidados do 300 Sky Bar.
 npm test
 ```
 
-88 testes no total, cobrindo as regras de domínio (disponibilidade, classificação, lista de convidados), as rotas de API e os componentes de UI (formulário público, painel admin, formulários de decisão/classificação/lista/regras/disponibilidade, botão de resolver integração).
+92 testes no total, cobrindo as regras de domínio (disponibilidade, classificação, lista de convidados), as rotas de API e os componentes de UI (formulário público, painel admin, formulários de decisão/classificação/lista/regras/disponibilidade, botão de resolver integração).
 
 ## Build de produção
 
