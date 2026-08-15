@@ -41,4 +41,23 @@ describe("GET /api/availability", () => {
     expect(res.status).toBe(200);
     expect(body.slots).toHaveLength(1);
   });
+
+  it("returns a generic 500 error when the Supabase query fails", async () => {
+    mockSelect.mockReturnValue({
+      eq: () => ({
+        gte: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: "boom" },
+          }),
+      }),
+    });
+
+    const req = new NextRequest("http://localhost/api/availability?venue=300-sky-bar");
+    const res = await GET(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(body).toEqual({ error: "internal_error" });
+  });
 });

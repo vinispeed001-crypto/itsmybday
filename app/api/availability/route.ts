@@ -12,6 +12,10 @@ export async function GET(req: NextRequest) {
   const supabase = createSupabaseServiceClient();
   const today = venueLocalDateString(new Date());
 
+  // TODO(multi-venue): this route accepts `venue` but doesn't filter by it yet —
+  // safe only while a single venue exists. Before seeding a second venue, join
+  // against venues.slug to scope this query, or every venue's open slots will
+  // leak into every other venue's public availability response.
   const { data, error } = await supabase
     .from("availability_slots")
     .select("id, venue_id, event_date, time, is_open")
@@ -19,7 +23,8 @@ export async function GET(req: NextRequest) {
     .gte("event_date", today);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("availability query failed", error);
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 
   return NextResponse.json({ slots: data ?? [] });
