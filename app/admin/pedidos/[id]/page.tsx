@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { DecisionPanel } from "./DecisionPanel";
+import { ClassificationForm } from "./ClassificationForm";
 
 export default async function RequestDetailPage({ params }: { params: { id: string } }) {
   const supabase = createSupabaseServerClient();
@@ -30,6 +31,8 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
       {request.status === "denied" && request.denial_reason && (
         <p className="text-danger">Negado: {request.denial_reason}</p>
       )}
+
+      {request.status === "approved" && <ClassificationForm requestId={request.id} />}
     </div>
   );
 }
