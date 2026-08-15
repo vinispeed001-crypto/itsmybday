@@ -52,4 +52,26 @@ describe("RequestsList", () => {
     expect(mockOn).toHaveBeenCalled();
     expect(mockSubscribe).toHaveBeenCalled();
   });
+
+  it("unsubscribes from realtime updates on unmount", () => {
+    const { unmount } = render(<RequestsList initialRequests={[]} />);
+    unmount();
+    expect(mockRemoveChannel).toHaveBeenCalled();
+  });
+
+  it("reloads the page when a realtime change event fires", () => {
+    const reloadMock = vi.fn();
+    Object.defineProperty(window, "location", {
+      value: { ...window.location, reload: reloadMock },
+      writable: true,
+    });
+
+    render(<RequestsList initialRequests={[]} />);
+
+    // mockOn was called as .on("postgres_changes", { event: "*", ... }, callback)
+    const callback = mockOn.mock.calls[0]![2];
+    callback();
+
+    expect(reloadMock).toHaveBeenCalled();
+  });
 });
