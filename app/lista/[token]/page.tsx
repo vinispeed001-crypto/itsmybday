@@ -1,11 +1,27 @@
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import type { GuestList, GuestListEntry } from "@/lib/types";
 import { EntryForm } from "./EntryForm";
 
 async function getListData(token: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/lists/${token}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  return res.json();
+  const supabase = createSupabaseServiceClient();
+
+  const { data: list, error } = await supabase
+    .from("guest_lists")
+    .select("id, max_men, max_women, deadline_at, share_token")
+    .eq("share_token", token)
+    .single<Pick<GuestList, "id" | "max_men" | "max_women" | "deadline_at" | "share_token">>();
+
+  if (error || !list) {
+    return null;
+  }
+
+  const { data: entries } = await supabase
+    .from("guest_list_entries")
+    .select("id, name, gender")
+    .eq("guest_list_id", list.id)
+    .returns<Pick<GuestListEntry, "id" | "name" | "gender">[]>();
+
+  return { list, entries: entries ?? [] };
 }
 
 export default async function ListPage({ params }: { params: { token: string } }) {
@@ -20,8 +36,8 @@ export default async function ListPage({ params }: { params: { token: string } }
   }
 
   const { list, entries } = data;
-  const menCount = entries.filter((e: { gender: string }) => e.gender === "male").length;
-  const womenCount = entries.filter((e: { gender: string }) => e.gender === "female").length;
+  const menCount = entries.filter((e) => e.gender === "male").length;
+  const womenCount = entries.filter((e) => e.gender === "female").length;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
@@ -32,7 +48,7 @@ export default async function ListPage({ params }: { params: { token: string } }
       </p>
       <EntryForm token={params.token} />
       <ul className="flex flex-col gap-2">
-        {entries.map((entry: { id: string; name: string; gender: string }) => (
+        {entries.map((entry) => (
           <li key={entry.id} className="rounded-card border border-border bg-surface p-3 text-ink">
             {entry.name} <span className="text-muted">({entry.gender === "male" ? "homem" : "mulher"})</span>
           </li>
