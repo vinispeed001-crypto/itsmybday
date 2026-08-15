@@ -22,6 +22,12 @@ export function RequestForm({ venueSlug }: { venueSlug: string }) {
       whatsapp: String(form.get("whatsapp") ?? ""),
     };
 
+    if (!payload.event_date || !payload.event_time) {
+      setError("Escolha a data e o horário do evento.");
+      setLoading(false);
+      return;
+    }
+
     const res = await fetch("/api/requests", {
       method: "POST",
       headers: { "content-type": "application/json" },

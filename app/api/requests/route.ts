@@ -14,6 +14,10 @@ export async function POST(req: NextRequest) {
 
   const supabase = createSupabaseServiceClient();
 
+  // TODO(multi-venue): venue_id is hardcoded to the single seeded venue and the
+  // [venueSlug] URL param is never used to resolve it — every submission lands
+  // on this one venue regardless of which venue's /pedido page it came from.
+  // Before seeding a second venue, resolve venue_id from venueSlug via venues.slug.
   const { data, error } = await supabase
     .from("requests")
     .insert({
