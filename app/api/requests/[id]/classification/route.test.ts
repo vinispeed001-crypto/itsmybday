@@ -4,11 +4,17 @@ import { NextRequest } from "next/server";
 
 const mockGetUser = vi.fn();
 const mockUpsert = vi.fn();
+const mockSingle = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: () => ({
     auth: { getUser: mockGetUser },
-    from: () => ({ upsert: mockUpsert }),
+    from: (table: string) => {
+      if (table === "requests") {
+        return { select: () => ({ eq: () => ({ single: mockSingle }) }) };
+      }
+      return { upsert: mockUpsert };
+    },
   }),
 }));
 
@@ -24,7 +30,9 @@ describe("POST /api/requests/[id]/classification", () => {
   beforeEach(() => {
     mockGetUser.mockReset();
     mockUpsert.mockReset();
+    mockSingle.mockReset();
     mockGetUser.mockResolvedValue({ data: { user: { id: "admin-1" } } });
+    mockSingle.mockResolvedValue({ data: { status: "approved" }, error: null });
   });
 
   it("returns 401 without an authenticated user", async () => {
@@ -56,5 +64,23 @@ describe("POST /api/requests/[id]/classification", () => {
       }),
       { onConflict: "request_id" }
     );
+  });
+
+  it("returns 409 when the request is not approved", async () => {
+    mockSingle.mockResolvedValue({ data: { status: "pending" }, error: null });
+
+    const res = await POST(makeRequest({ type: "tudo_vip" }), { params: { id: "req-1" } });
+
+    expect(res.status).toBe(409);
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when the request does not exist", async () => {
+    mockSingle.mockResolvedValue({ data: null, error: { message: "not found" } });
+
+    const res = await POST(makeRequest({ type: "tudo_vip" }), { params: { id: "req-1" } });
+
+    expect(res.status).toBe(404);
+    expect(mockUpsert).not.toHaveBeenCalled();
   });
 });

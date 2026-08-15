@@ -19,6 +19,20 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const { data: request, error: fetchError } = await supabase
+    .from("requests")
+    .select("status")
+    .eq("id", params.id)
+    .single();
+
+  if (fetchError || !request) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  if (request.status !== "approved") {
+    return NextResponse.json({ error: "request_not_approved" }, { status: 409 });
+  }
+
   const { error } = await supabase.from("classifications").upsert(
     {
       request_id: params.id,
