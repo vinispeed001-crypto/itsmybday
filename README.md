@@ -61,6 +61,15 @@ a equipe confere o que ainda precisa ser feito manualmente:
 - Mandar a mensagem no WhatsApp (até mapearmos a API/webhook do Nicochat).
 - Subir a lista final no pensanoevento (até integrarmos a API deles).
 
+## Limitação conhecida: grade de disponibilidade não bloqueia o formulário
+
+O admin já pode curar datas/horários abertos em `/admin/disponibilidade`, e a API pública
+`GET /api/availability` já serve essa grade — mas o formulário de pedido
+(`/[venueSlug]/pedido`) ainda usa campos de data/horário livres, sem consultar essa API.
+Ou seja, hoje um convidado pode pedir qualquer data, independente do que a casa abriu.
+Conectar o formulário público a `GET /api/availability` (ex: trocar os campos livres por
+um seletor que só mostra as datas/horários abertos) é a próxima melhoria natural aqui.
+
 ## Checklist de QA manual
 
 Não há um projeto Supabase real conectado neste ambiente de desenvolvimento, então este
