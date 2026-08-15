@@ -2,7 +2,7 @@ import type { AvailabilitySlot } from "@/lib/types";
 
 const VENUE_TIME_ZONE = "America/Sao_Paulo";
 
-function venueLocalDateString(date: Date): string {
+export function venueLocalDateString(date: Date): string {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: VENUE_TIME_ZONE,
     year: "numeric",
