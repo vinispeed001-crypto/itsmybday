@@ -28,11 +28,23 @@ describe("POST /api/integration-events/[id]/resolve", () => {
   });
 
   it("marks the event as sent", async () => {
-    mockUpdate.mockReturnValue({ eq: () => Promise.resolve({ error: null }) });
+    mockUpdate.mockReturnValue({
+      eq: () => ({ select: () => Promise.resolve({ data: [{ id: "ev-1" }], error: null }) }),
+    });
     const res = await POST(new NextRequest("http://localhost/api/integration-events/ev-1/resolve", { method: "POST" }), {
       params: { id: "ev-1" },
     });
     expect(res.status).toBe(200);
     expect(mockUpdate).toHaveBeenCalledWith({ status: "sent", resolved_at: expect.any(String) });
+  });
+
+  it("returns 404 when no event matches the id", async () => {
+    mockUpdate.mockReturnValue({
+      eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) }),
+    });
+    const res = await POST(new NextRequest("http://localhost/api/integration-events/ev-1/resolve", { method: "POST" }), {
+      params: { id: "ev-1" },
+    });
+    expect(res.status).toBe(404);
   });
 });
