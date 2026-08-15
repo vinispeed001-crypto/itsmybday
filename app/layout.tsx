@@ -4,6 +4,12 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "ItsMyBday",
   description: "Pedido e aprovação de listas de aniversário — 300 Sky Bar",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "ItsMyBday",
+  },
 };
 
 export const viewport: Viewport = {
