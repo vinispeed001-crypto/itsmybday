@@ -46,7 +46,9 @@ describe("POST /api/requests/[id]/decision", () => {
   });
 
   it("approves and creates getin + whatsapp integration events", async () => {
-    mockUpdate.mockReturnValue({ eq: () => Promise.resolve({ error: null }) });
+    mockUpdate.mockReturnValue({
+      eq: () => ({ eq: () => ({ select: () => Promise.resolve({ data: [{ id: "req-1" }], error: null }) }) }),
+    });
     mockInsert.mockResolvedValue({ error: null });
 
     const res = await POST(makeRequest({ decision: "approve" }), { params: { id: "req-1" } });
@@ -62,7 +64,9 @@ describe("POST /api/requests/[id]/decision", () => {
   });
 
   it("denies with a reason and creates a whatsapp integration event", async () => {
-    mockUpdate.mockReturnValue({ eq: () => Promise.resolve({ error: null }) });
+    mockUpdate.mockReturnValue({
+      eq: () => ({ eq: () => ({ select: () => Promise.resolve({ data: [{ id: "req-1" }], error: null }) }) }),
+    });
     mockInsert.mockResolvedValue({ error: null });
 
     const res = await POST(
@@ -77,5 +81,30 @@ describe("POST /api/requests/[id]/decision", () => {
     expect(mockInsert).toHaveBeenCalledWith([
       expect.objectContaining({ request_id: "req-1", type: "whatsapp_notification" }),
     ]);
+  });
+
+  it("returns 409 when approving a request that is no longer pending", async () => {
+    mockUpdate.mockReturnValue({
+      eq: () => ({ eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) }) }),
+    });
+
+    const res = await POST(makeRequest({ decision: "approve" }), { params: { id: "req-1" } });
+
+    expect(res.status).toBe(409);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("returns 409 when denying a request that is no longer pending", async () => {
+    mockUpdate.mockReturnValue({
+      eq: () => ({ eq: () => ({ select: () => Promise.resolve({ data: [], error: null }) }) }),
+    });
+
+    const res = await POST(
+      makeRequest({ decision: "deny", denial_reason: "Lotação máxima pra essa data" }),
+      { params: { id: "req-1" } }
+    );
+
+    expect(res.status).toBe(409);
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 });

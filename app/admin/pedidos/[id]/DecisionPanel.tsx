@@ -13,25 +13,50 @@ export function DecisionPanel({ requestId }: { requestId: string }) {
   const router = useRouter();
   const [showDenyForm, setShowDenyForm] = useState(false);
   const [reason, setReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   async function approve() {
-    await fetch(`/api/requests/${requestId}/decision`, {
+    setError(null);
+    const res = await fetch(`/api/requests/${requestId}/decision`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ decision: "approve" }),
     });
+
+    if (!res.ok) {
+      setError("Não deu pra aprovar o pedido. Tenta de novo.");
+      return;
+    }
+
     router.refresh();
   }
 
   async function confirmDeny() {
-    if (reason.trim().length < 3) return;
+    if (reason.trim().length < 3) {
+      setError("Informe um motivo com pelo menos 3 caracteres.");
+      return;
+    }
 
-    await fetch(`/api/requests/${requestId}/decision`, {
+    setError(null);
+
+    const res = await fetch(`/api/requests/${requestId}/decision`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ decision: "deny", denial_reason: reason }),
+      body: JSON.stringify({ decision: "deny", denial_reason: reason.trim() }),
     });
+
+    if (!res.ok) {
+      setError("Não deu pra negar o pedido. Tenta de novo.");
+      return;
+    }
+
     router.refresh();
+  }
+
+  function cancelDeny() {
+    setShowDenyForm(false);
+    setReason("");
+    setError(null);
   }
 
   if (showDenyForm) {
@@ -57,33 +82,46 @@ export function DecisionPanel({ requestId }: { requestId: string }) {
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={confirmDeny}
-          className="rounded-card bg-danger px-4 py-2 font-semibold text-ink"
-        >
-          Confirmar
-        </button>
+        {error && <p className="text-danger">{error}</p>}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={confirmDeny}
+            className="rounded-card bg-danger px-4 py-2 font-semibold text-ink"
+          >
+            Confirmar
+          </button>
+          <button
+            type="button"
+            onClick={cancelDeny}
+            className="rounded-card border border-border px-4 py-2 text-muted hover:text-ink"
+          >
+            Cancelar
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex gap-3">
-      <button
-        type="button"
-        onClick={approve}
-        className="rounded-card bg-gold px-4 py-2 font-semibold text-bg"
-      >
-        Aceitar
-      </button>
-      <button
-        type="button"
-        onClick={() => setShowDenyForm(true)}
-        className="rounded-card border border-border px-4 py-2 text-muted hover:text-ink"
-      >
-        Negar
-      </button>
+    <div className="flex flex-col gap-3">
+      {error && <p className="text-danger">{error}</p>}
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={approve}
+          className="rounded-card bg-gold px-4 py-2 font-semibold text-bg"
+        >
+          Aceitar
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowDenyForm(true)}
+          className="rounded-card border border-border px-4 py-2 text-muted hover:text-ink"
+        >
+          Negar
+        </button>
+      </div>
     </div>
   );
 }
