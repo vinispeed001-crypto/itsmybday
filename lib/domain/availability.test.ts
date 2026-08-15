@@ -33,4 +33,14 @@ describe("filterOpenFutureSlots", () => {
     const result = filterOpenFutureSlots(slots, today);
     expect(result.map((s) => s.id)).toEqual(["today"]);
   });
+
+  it("uses the venue's local (America/Sao_Paulo) calendar date, not UTC", () => {
+    // 23:30 in São Paulo (UTC-3) on 2098-06-15 is already 2098-06-16T02:30:00Z in UTC.
+    // A naive UTC-based "today" calculation would compute todayIso = "2098-06-16"
+    // and incorrectly exclude tonight's slot.
+    const lateEveningLocal = new Date("2098-06-15T23:30:00-03:00");
+    const slots = [slot({ id: "tonight", event_date: "2098-06-15" })];
+    const result = filterOpenFutureSlots(slots, lateEveningLocal);
+    expect(result.map((s) => s.id)).toEqual(["tonight"]);
+  });
 });

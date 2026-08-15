@@ -47,4 +47,23 @@ describe("canAddEntry", () => {
     const result = canAddEntry(list, existing, "male", new Date("2099-06-01"));
     expect(result).toEqual({ allowed: false, reason: "deadline_passed" });
   });
+
+  it("ignores entries of the other gender when counting quota", () => {
+    // max_men: 2, and the female quota (max_women: 1) is already full,
+    // but that must not affect whether a male entry is allowed.
+    const existing = [entry("female", "e1"), entry("female", "e2")];
+    const result = canAddEntry(list, existing, "male", new Date("2020-01-01"));
+    expect(result).toEqual({ allowed: true });
+  });
+
+  it("rejects when now is exactly equal to the deadline", () => {
+    const result = canAddEntry(list, [], "male", new Date(list.deadline_at));
+    expect(result).toEqual({ allowed: false, reason: "deadline_passed" });
+  });
+
+  it("allows adding when one entry below capacity", () => {
+    const existing = [entry("male", "e1")];
+    const result = canAddEntry(list, existing, "male", new Date("2020-01-01"));
+    expect(result).toEqual({ allowed: true });
+  });
 });

@@ -34,12 +34,21 @@ export const classificationSchema = z
         message: "Informe até que horário vale o VIP",
       });
     }
-    if (data.type === "valor_genero" && (data.value_male === undefined || data.value_female === undefined)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["value_male"],
-        message: "Informe o valor para homens e mulheres",
-      });
+    if (data.type === "valor_genero") {
+      if (data.value_male === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["value_male"],
+          message: "Informe o valor para homens",
+        });
+      }
+      if (data.value_female === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["value_female"],
+          message: "Informe o valor para mulheres",
+        });
+      }
     }
   });
 

@@ -25,6 +25,19 @@ describe("classificationSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("anchors the error at value_female's path when only value_male is provided", () => {
+    const result = classificationSchema.safeParse({
+      type: "valor_genero",
+      value_male: 200,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(
+        result.error.issues.some((issue) => issue.path.includes("value_female"))
+      ).toBe(true);
+    }
+  });
+
   it("accepts valor_genero with both values", () => {
     const result = classificationSchema.safeParse({
       type: "valor_genero",
