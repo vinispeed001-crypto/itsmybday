@@ -14,7 +14,7 @@ vi.mock("@/lib/supabase/service", () => ({
       }
       if (table === "guest_list_entries") {
         return {
-          select: () => ({ eq: mockEntriesSelect }),
+          select: () => ({ eq: () => ({ returns: mockEntriesSelect }) }),
           insert: mockInsert,
         };
       }
@@ -64,5 +64,21 @@ describe("POST /api/lists/[token]/entries", () => {
 
     expect(res.status).toBe(201);
     expect(mockInsert).toHaveBeenCalledWith({ guest_list_id: "gl-1", name: "João", gender: "male" });
+  });
+
+  it("returns 409 quota_full when the DB capacity trigger rejects a race-losing insert", async () => {
+    // The application-level canAddEntry check passed on a stale read (room
+    // available), but a concurrent request beat this one to the last slot;
+    // the guest_list_capacity_guard trigger catches it at insert time.
+    mockEntriesSelect.mockResolvedValue({ data: [], error: null });
+    mockInsert.mockResolvedValue({
+      error: { code: "P0001", message: "guest_list_capacity_exceeded" },
+    });
+
+    const res = await POST(makeRequest({ name: "João", gender: "male" }), { params: { token: "tok" } });
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.reason).toBe("quota_full");
   });
 });
