@@ -35,12 +35,12 @@ create table requests (
   quantity int not null check (quantity > 0),
   instagram text not null,
   whatsapp text not null,
-  referred_by_profile_id uuid references profiles(id),
+  referred_by_profile_id uuid references profiles(id) on delete set null,
   status text not null default 'pending' check (status in ('pending', 'approved', 'denied')),
   denial_reason text,
   created_at timestamptz not null default now(),
   decided_at timestamptz,
-  decided_by uuid references profiles(id)
+  decided_by uuid references profiles(id) on delete set null
 );
 
 create table classifications (
@@ -61,7 +61,8 @@ create table guest_lists (
   max_women int not null default 0,
   deadline_at timestamptz not null,
   share_token text not null unique,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  check (max_men >= 0 and max_women >= 0)
 );
 
 create table guest_list_entries (
