@@ -30,6 +30,10 @@ export default function Home() {
           Galeria
         </Link>
       </div>
+
+      <Link href="/admin/login" className="text-xs text-muted underline">
+        Acesso administrativo
+      </Link>
     </main>
   );
 }
