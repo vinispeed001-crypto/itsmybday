@@ -1,14 +1,28 @@
 import { z } from "zod";
 
-export const createRequestSchema = z.object({
-  requester_name: z.string().min(2, "Nome muito curto").max(200, "Nome muito longo"),
-  event_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
-  event_time: z.string().regex(/^\d{2}:\d{2}$/, "Horário inválido"),
-  quantity: z.number().int().positive(),
-  instagram: z.string().min(2, "Informe o Instagram").max(200, "Instagram muito longo"),
-  whatsapp: z.string().min(8, "Informe um WhatsApp válido").max(50, "WhatsApp muito longo"),
-  referred_by_profile_id: z.string().uuid().nullable().optional(),
-});
+export const createRequestSchema = z
+  .object({
+    requester_name: z.string().min(2, "Nome muito curto").max(200, "Nome muito longo"),
+    event_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
+    event_time: z.string().regex(/^\d{2}:\d{2}$/, "Horário inválido"),
+    alternative_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Data alternativa inválida")
+      .nullable()
+      .optional(),
+    only_requested_date: z.boolean().optional().default(false),
+    quantity: z.number().int().positive(),
+    instagram: z.string().min(2, "Informe o Instagram").max(200, "Instagram muito longo"),
+    whatsapp: z.string().min(8, "Informe um WhatsApp válido").max(50, "WhatsApp muito longo"),
+    terms_accepted: z.literal(true, {
+      errorMap: () => ({ message: "É preciso concordar com as regras da casa" }),
+    }),
+    referred_by_profile_id: z.string().uuid().nullable().optional(),
+  })
+  .transform((data) => ({
+    ...data,
+    alternative_date: data.only_requested_date ? null : data.alternative_date || null,
+  }));
 
 export const decisionSchema = z.discriminatedUnion("decision", [
   z.object({ decision: z.literal("approve") }),
