@@ -25,9 +25,12 @@ export async function POST(req: NextRequest) {
       requester_name: parsed.data.requester_name,
       event_date: parsed.data.event_date,
       event_time: parsed.data.event_time,
+      alternative_date: parsed.data.alternative_date,
+      only_requested_date: parsed.data.only_requested_date,
       quantity: parsed.data.quantity,
       instagram: parsed.data.instagram,
       whatsapp: parsed.data.whatsapp,
+      terms_accepted: parsed.data.terms_accepted,
       referred_by_profile_id: parsed.data.referred_by_profile_id ?? null,
       status: "pending",
     })
